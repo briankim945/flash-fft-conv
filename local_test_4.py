@@ -21,13 +21,24 @@ def ref_fft_conv_1d(u, k, n=None):
 
 def ref_fft_conv_2d(u, k, s=None):
     if s is None:
+        s = (u.size(-2), u.size(-1))
+    l_h = u.size(-2)
+    l_w = u.size(-1)
+    u_f = torch.fft.fftn(u.to(torch.float32), dim=(-2,-1), s=s)
+    k_f = torch.fft.fftn(k.to(torch.float32), dim=(-2,-1), s=s)
+    u_f = u_f * k_f
+    out = torch.fft.ifftn(u_f, dim=(-2,-1), s=s)
+    return out.real.to(u.dtype)[..., :l_h, :l_w]
+
+def ref_fft_conv_2d_12(u, k, s=None):
+    if s is None:
         s = (u.size(-1), u.size(-2))
     l_h = u.size(-2)
     l_w = u.size(-1)
     u_f = torch.fft.fftn(u.to(torch.float32), dim=(-1,-2), s=s)
     k_f = torch.fft.fftn(k.to(torch.float32), dim=(-1,-2), s=s)
     u_f = u_f * k_f
-    out = torch.fft.ifftn(u_f, s=s)
+    out = torch.fft.ifftn(u_f, dim=(-1,-2), s=s)
     return out.real.to(u.dtype)[..., :l_h, :l_w]
 
 
@@ -44,7 +55,13 @@ print(x)
 print(k)
 print()
 
-out_2d = ref_fft_conv_2d(x, k)
+x_clone = x.clone()
+k_clone = k.clone()
+out_2d = ref_fft_conv_2d(x_clone, k_clone)
+
+x_clone_12 = x.clone()
+k_clone_12 = k.clone()
+out_2d_12 = ref_fft_conv_2d_12(x_clone_12, k_clone_12)
 
 x = x.reshape(B, H, L * L)
 k = k.reshape(H, L * L)
@@ -53,10 +70,11 @@ print(x)
 print(k)
 print()
 
-out_1d = ref_fft_conv_2d(x, k)
+out_1d = ref_fft_conv_1d(x, k)
 
-print(out_2d)
 print(out_1d)
+print(out_2d)
+print(out_2d_12)
 
 sys.exit()
 

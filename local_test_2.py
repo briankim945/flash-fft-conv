@@ -124,15 +124,25 @@ k2_clone_f_scan = convert_kernel_fft(k2.clone(), seqlen).cpu().numpy()
 k3_clone_f_scan = convert_kernel_fft(k3.clone(), seqlen).cpu().numpy()
 k4_clone_f_scan = convert_kernel_fft(k4.clone(), seqlen).cpu().numpy()
 
+# scan_kernels = associative_scan(
+#     jnp.multiply,
+#     jnp.array([k1_clone_f_scan, k2_clone_f_scan, k3_clone_f_scan, k4_clone_f_scan])
+# )
+# # print(len(scan_kernels))
+# # print([scan_item.shape for scan_item in scan_kernels])
+# print(scan_kernels.shape)
+
 scan_kernels = associative_scan(
-    jnp.multiply,
-    jnp.array([k1_clone_f_scan, k2_clone_f_scan, k3_clone_f_scan, k4_clone_f_scan])
+    torch.multiply,
+    torch.tensor([k1_clone_f_scan, k2_clone_f_scan, k3_clone_f_scan, k4_clone_f_scan]),
+    axis=0
 )
 # print(len(scan_kernels))
 # print([scan_item.shape for scan_item in scan_kernels])
 print(scan_kernels.shape)
 
-ks_to_scan_4 = torch.tensor(np.array(scan_kernels[-1])).to(device)
+# ks_to_scan_4 = torch.tensor(np.array(scan_kernels[-1])).to(device)
+ks_to_scan_4 = scan_kernels[-1].to(device)
 
 noifft_out_flash4_scan = my_flashfftconv_noifft(x_clone_f_scan, ks_to_scan_4)
 

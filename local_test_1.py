@@ -38,7 +38,7 @@ L = 4096
 N = seqlen
 x = torch.randn(B, H, N // 2, device=device).to(dtype) * 0.02
 k = torch.randn(H, N // 2, device=device) * 0.02
-mask = mask = (torch.exp(-0.1 * torch.arange(0, seqlen, device=device)))[:seqlen // 2]
+mask = (torch.exp(-0.1 * torch.arange(0, seqlen, device=device)))[:seqlen // 2]
 k = k * mask
 
 x_clone = x.clone()
