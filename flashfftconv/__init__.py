@@ -1,4 +1,5 @@
 from .conv import FlashFFTConv
 from .conv_no_ifft import FlashFFTConvNoiFFT, convert_kernel_fft
+from .conv2d_jax import manual_flash_fft_conv_2d, manual_flash_fft_conv_2d_noifft
 from .depthwise_1d import FlashDepthWiseConv1d
 from .depthwise_1d_dup import FlashDepthWiseConv1dPython
