@@ -39,9 +39,9 @@ H = 192
 L = 64 #4096
 kernel_T = 10 # Number of kernels
 
-x = random.normal(key, (B, H, L, L), device=device).to(dtype) * 0.02
-ks = [random.normal(key, (H, L, L), device=device) * 0.02 for _ in range(kernel_T)]
-mask = (jnp.exp(-0.1 * jnp.arange(0, L * L, device=device)))[:L*L].reshape(L,L)
+x = random.normal(key, (B, H, L, L)) * 0.02
+ks = [random.normal(key, (H, L, L)) * 0.02 for _ in range(kernel_T)]
+mask = (jnp.exp(-0.1 * jnp.arange(0, L * L)))[:L*L].reshape(L,L)
 ks = [k * mask for k in ks]
 
 x_clone = x.clone()
