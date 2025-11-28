@@ -48,6 +48,7 @@ img_list = [8, 16, 32] #, 64, 128] #, 256]
 kc_list = [10, 25, 50, 100] #, 75]# 100] #, 200]
 
 time_dict_ifft = {l: {kc: [] for kc in kc_list} for l in img_list}
+time_dict_no_ifft_scan = {l: {kc: [] for kc in kc_list} for l in img_list}
 time_dict_no_ifft = {l: {kc: [] for kc in kc_list} for l in img_list}
 time_dict_no_ifft_jax = {l: {kc: [] for kc in kc_list} for l in img_list}
 time_dict_no_ifft_jax_single = {l: {kc: [] for kc in kc_list} for l in img_list}
@@ -98,6 +99,22 @@ for image_len in img_list:
             time_end = time.perf_counter()
             out_ref_time = time_end - time_start
             time_dict_ifft[image_len][kernel_count].append(time_end - time_start)
+
+            ### STANDARD FFT SCAN
+
+            x_clone_std_scan = x.clone()
+            ks_clones_std_scan = [k.clone() for k in ks]
+
+            time_start = time.perf_counter()
+            out_ref_scan = jnp.fft.fftn(x_clone_std_scan.astype(jnp.float32), axes=(-2, -1), s=s) * jnp.fft.fftn(ks_clones[0].astype(jnp.float32), axes=(-2, -1), s=s)
+            for k_clone in ks_clones[1:]:
+                out_ref_scan = out_ref_scan * jnp.fft.fftn(k_clone.astype(jnp.float32), axes=(-2, -1), s=s)
+            time_end = time.perf_counter()
+            out_ref_time = time_end - time_start
+            time_dict_no_ifft_scan[image_len][kernel_count].append(time_end - time_start)
+
+            if not jnp.allclose(out_ref, out_ref_scan, atol=1e-2):
+                print("out_ref, out_ref_scan")
 
             ### FFT FLASH NO iFFT SEQUENTIAL
 
@@ -160,6 +177,7 @@ for image_len in img_list:
     for kernel_count in kc_list:
         print("\tkernel_count:", kernel_count)
         print(f"\t\tMean time sequential: {np.mean(time_dict_ifft[image_len][kernel_count]) / kernel_count}")
-        print(f"\t\tMean time no iFFT: {np.mean(time_dict_no_ifft[image_len][kernel_count]) / kernel_count}")
-        print(f"\t\tMean time no iFFT scan: {np.mean(time_dict_no_ifft_jax[image_len][kernel_count]) / kernel_count}")
-        print(f"\t\tMean time no iFFT scan once: {np.mean(time_dict_no_ifft_jax_single[image_len][kernel_count]) / kernel_count}")
+        print(f"\t\tMean time no iFFT Flash scan: {np.mean(time_dict_no_ifft_scan[image_len][kernel_count]) / kernel_count}")
+        print(f"\t\tMean time no iFFT Flash: {np.mean(time_dict_no_ifft[image_len][kernel_count]) / kernel_count}")
+        print(f"\t\tMean time no iFFT Flash scan: {np.mean(time_dict_no_ifft_jax[image_len][kernel_count]) / kernel_count}")
+        print(f"\t\tMean time no iFFT Flash scan once: {np.mean(time_dict_no_ifft_jax_single[image_len][kernel_count]) / kernel_count}")
